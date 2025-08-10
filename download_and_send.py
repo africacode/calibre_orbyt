@@ -1,74 +1,97 @@
 import os
-import subprocess
-import smtplib
+import time
+import requests
 from email.message import EmailMessage
+import smtplib
+import subprocess
 
-# Variables de entorno
+FROM_EMAIL = os.getenv('FROM_EMAIL')
+TO_EMAIL = os.getenv('TO_EMAIL')
+APP_PASSWORD = os.getenv('APP_PASSWORD')
+
 ORBYT_USER = os.getenv('ORBYT_USER')
 ORBYT_PASS = os.getenv('ORBYT_PASS')
-FROM_EMAIL = os.getenv('FROM_EMAIL')
-APP_PASSWORD = os.getenv('APP_PASSWORD')
-TO_EMAIL = os.getenv('TO_EMAIL')
 
-# Recetas para epub (web)
-recipes_epub = {
-    'El_Pais': 'recipes/elpais.recipe',
-    'FT': 'recipes/financial_times.recipe',
-    'WSJ': 'recipes/wsj_news.recipe',
-}
+def download_pdf_orbyt(publication, date_str):
+    """ Descarga el PDF completo de Orbyt dado el periódico y la fecha """
+    session = requests.Session()
+    login_url = 'https://orbyt.com/login'  # URL real puede variar
+    # Aquí debes añadir el código exacto para hacer login, esto es ejemplo
+    login_data = {
+        'username': ORBYT_USER,
+        'password': ORBYT_PASS,
+    }
+    resp = session.post(login_url, data=login_data)
+    resp.raise_for_status()
 
-# Recetas pdf directo orbyt
-pdfs_orbyt = {
-    'El_Mundo': 'recipes/elmundo_orbyt.recipe',
-    'Expansion': 'recipes/expansion_orbyt.recipe',
-}
+    pdf_url = f"https://quiosco.{publication}.orbyt.es/epaper/pdf/{date_str}.pdf"
+    r = session.get(pdf_url)
+    if r.status_code == 200:
+        filename = f"{publication}_{date_str}.pdf"
+        with open(filename, 'wb') as f:
+            f.write(r.content)
+        print(f"Descargado {filename}")
+        return filename
+    else:
+        print(f"No se pudo descargar PDF {pdf_url}, status {r.status_code}")
+        return None
 
-def download_epubs():
-    epubs = []
-    for name, recipe_path in recipes_epub.items():
-        epub_filename = f"{name}.epub"
-        print(f"Generando EPUB {epub_filename} desde {recipe_path}...")
-        subprocess.run(['ebook-convert', recipe_path, epub_filename], check=True)
-        epubs.append(epub_filename)
-    return epubs
+def convert_recipe_to_epub(name, recipe_path):
+    epub_file = f"{name}.epub"
+    subprocess.run(['ebook-convert', recipe_path, epub_file], check=True)
+    return epub_file
 
-def download_pdfs_orbyt():
-    pdfs = []
-    for name, recipe_path in pdfs_orbyt.items():
-        pdf_filename = f"{name}.pdf"
-        print(f"Generando PDF {pdf_filename} desde {recipe_path} (Orbyt)...")
-        # Aquí asumimos que el recipe sabe sacar el pdf directo (o usar wget/curl)
-        # Por simplicidad llamamos ebook-convert, pero puede ser otra cosa
-        subprocess.run(['ebook-convert', recipe_path, pdf_filename], check=True)
-        pdfs.append(pdf_filename)
-    return pdfs
-
-def send_email(attachments):
+def send_email(files):
     msg = EmailMessage()
     msg['From'] = FROM_EMAIL
     msg['To'] = TO_EMAIL
-    msg['Subject'] = 'Tus periódicos del día'
+    msg['Subject'] = "Tus periódicos del día"
 
-    for filename in attachments:
-        with open(filename, 'rb') as f:
-            if filename.endswith('.pdf'):
-                maintype, subtype = 'application', 'pdf'
-            elif filename.endswith('.epub'):
-                maintype, subtype = 'application', 'epub+zip'
+    for file in files:
+        with open(file, 'rb') as f:
+            if file.endswith('.pdf'):
+                subtype = 'pdf'
+                maintype = 'application'
+            elif file.endswith('.epub'):
+                subtype = 'epub+zip'
+                maintype = 'application'
             else:
-                maintype, subtype = 'application', 'octet-stream'
-            msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=filename)
+                maintype = 'application'
+                subtype = 'octet-stream'
+            msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=file)
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(FROM_EMAIL, APP_PASSWORD)
         smtp.send_message(msg)
-    print("Correo enviado.")
+    print("Correo enviado!")
 
 def main():
-    attachments = []
-    attachments += download_epubs()
-    attachments += download_pdfs_orbyt()
-    send_email(attachments)
+    today = time.strftime('%Y_%m_%d')
+
+    files_to_send = []
+
+    # Descarga PDFs Orbyt
+    for pub in ['elmundo', 'expansion']:
+        pdf_file = download_pdf_orbyt(pub, today)
+        if pdf_file:
+            files_to_send.append(pdf_file)
+
+    # Convierte los otros periódicos a EPUB (modifica según tengas recetas)
+    recipes = {
+        'elpais': 'recipes/elpais.recipe',
+        'financialtimes': 'recipes/financial_times.recipe',
+        # añade aquí otras recetas que quieras
+    }
+
+    for name, path in recipes.items():
+        try:
+            epub_file = convert_recipe_to_epub(name, path)
+            files_to_send.append(epub_file)
+        except subprocess.CalledProcessError:
+            print(f"Error convirtiendo {name}")
+
+    # Envía correo con todos los archivos
+    send_email(files_to_send)
 
 if __name__ == '__main__':
     main()
