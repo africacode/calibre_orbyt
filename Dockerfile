@@ -1,16 +1,18 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y calibre wget curl
+# Instala wget, curl, y herramientas necesarias
+RUN apt-get update && apt-get install -y \
+    wget curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instala Calibre (versión CLI)
+RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
+
+# Instala dependencias python
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 WORKDIR /app
+COPY . /app
 
-COPY recipes/ ./recipes/
-COPY download_and_send.py .
-
-ENV ORBYT_USER=''
-ENV ORBYT_PASS=''
-ENV FROM_EMAIL=''
-ENV APP_PASSWORD=''
-ENV TO_EMAIL=''
-
-CMD ["python", "download_and_send.py"]
+CMD ["python", "main.py"]
