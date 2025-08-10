@@ -1,8 +1,6 @@
 FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Instalar dependencias completas para Calibre
+# Instalamos dependencias necesarias incluyendo xz-utils para .txz
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget curl xz-utils \
     libegl1 libopengl0 libxcb-cursor0 libxrender1 libxi6 libxcomposite1 libxrandr2 \
@@ -12,18 +10,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 libxau6 libxdmcp6 zlib1g libbz2-1.0 libexpat1 libuuid1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Calibre CLI
-RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
-
-# Copiar requerimientos
-COPY requirements.txt /app/requirements.txt
-
-# Instalar dependencias Python
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Copiar código
-COPY . /app
-WORKDIR /app
-
-CMD ["python", "main.py"]
-
+# Instalamos Calibre desde su script oficial
+RUN wget -nv -O- htt
