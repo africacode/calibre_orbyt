@@ -15,7 +15,7 @@ ORBYT_PASS = os.getenv('ORBYT_PASS')
 def download_pdf_orbyt(publication, date_str):
     """ Descarga el PDF completo de Orbyt dado el periódico y la fecha """
     session = requests.Session()
-    login_url = 'https://orbyt.com/login'  # URL real puede variar
+    login_url = 'http://quiosco.orbyt.es/'  # URL real puede variar
     # Aquí debes añadir el código exacto para hacer login, esto es ejemplo
     login_data = {
         'username': ORBYT_USER,
