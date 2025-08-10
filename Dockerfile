@@ -1,7 +1,9 @@
 FROM python:3.11-slim
 
-# Instalar todas las dependencias necesarias para Calibre CLI
-RUN apt-get update && apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Instalar dependencias necesarias para Calibre
+RUN apt-get update && apt-get install -y --no-install-recommends \
     wget curl \
     libegl1 \
     libopengl0 \
@@ -19,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     libfontconfig1 \
     libharfbuzz0b \
     libfribidi0 \
-    libpng16-16 \
+    libpng16-16 || apt-get install -y libpng-dev \
     libjpeg62-turbo \
     libtiff5 \
     libnss3 \
@@ -31,11 +33,21 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Calibre (CLI)
+# Instalar Calibre CLI
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
 
-# Copiar requerimientos de Python
+# Copiar requerimientos
 COPY requirements.txt /app/requirements.txt
+
+# Instalar dependencias Python
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copiar todo el código
+COPY . /app
+WORKDIR /app
+
+CMD ["python", "main.py"]
+
 
 # Instalar dependencias de Python
 RUN pip install --no-cache-dir -r /app/requirements.txt
