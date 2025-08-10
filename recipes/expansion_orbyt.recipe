@@ -1,0 +1,26 @@
+import os
+from calibre.web.feeds.news import BasicNewsRecipe
+from datetime import datetime
+
+class ExpansionOrbyt(BasicNewsRecipe):
+    title = 'Expansion Orbyt'
+    oldest_article = 1
+    max_articles_per_feed = 1
+
+    ORBYT_USER = os.getenv('ORBYT_USER')
+    ORBYT_PASS = os.getenv('ORBYT_PASS')
+
+    def get_pdf_url(self):
+        date_str = datetime.now().strftime('%d_%m_%Y')
+        return f'https://quiosco.expansion.orbyt.es/epaper/download.aspx?publication=Expansion&date={date_str}'
+
+    def fetch(self, url):
+        import requests
+        r = requests.get(url, auth=(self.ORBYT_USER, self.ORBYT_PASS))
+        r.raise_for_status()
+        return r.content
+
+    def get_articles(self):
+        pdf_url = self.get_pdf_url()
+        pdf_data = self.fetch(pdf_url)
+        yield ('ExpansionOrbyt.pdf', pdf_data)
