@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1 \
     libharfbuzz0b \
     libfribidi0 \
-    libpng16-16 || apt-get install -y libpng-dev \
     libjpeg62-turbo \
     libtiff5 \
     libnss3 \
@@ -31,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcups2 \
     libdrm2 \
     libasound2 \
+    libpng16-16 || apt-get install -y libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar Calibre CLI
@@ -46,15 +46,4 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 WORKDIR /app
 
-CMD ["python", "main.py"]
-
-
-# Instalar dependencias de Python
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
-# Copiar todo el código
-COPY . /app
-WORKDIR /app
-
-# Comando por defecto
 CMD ["python", "main.py"]
