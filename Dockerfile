@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Instalar dependencias del sistema necesarias para Calibre
+# Instalar todas las dependencias necesarias para Calibre CLI
 RUN apt-get update && apt-get install -y \
     wget curl \
     libegl1 \
@@ -15,6 +15,20 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libxkbcommon-x11-0 \
     libglib2.0-0 \
+    libfreetype6 \
+    libfontconfig1 \
+    libharfbuzz0b \
+    libfribidi0 \
+    libpng16-16 \
+    libjpeg62-turbo \
+    libtiff5 \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar Calibre (CLI)
@@ -26,7 +40,7 @@ COPY requirements.txt /app/requirements.txt
 # Instalar dependencias de Python
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copiar todo el proyecto
+# Copiar todo el código
 COPY . /app
 WORKDIR /app
 
