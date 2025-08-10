@@ -1,21 +1,22 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-RUN apt-get update && apt-get install -y libegl1 libopengl0
-RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
-
-# Instala wget, curl, y herramientas necesarias
+# Instalamos dependencias necesarias para calibre
 RUN apt-get update && apt-get install -y \
-    wget curl \
+    wget \
+    libegl1 \
+    libopengl0 \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala Calibre (versión CLI)
+# Instalamos calibre
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
 
-# Instala dependencias python
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-
+# Copiamos tu script y recetas
 WORKDIR /app
 COPY . /app
 
-CMD ["python", "main.py"]
+# Instalamos dependencias Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["python3", "main.py"]
+
