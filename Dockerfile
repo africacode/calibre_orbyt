@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+RUN apt-get update && apt-get install -y libegl1 libopengl0
+RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
+
 # Instala wget, curl, y herramientas necesarias
 RUN apt-get update && apt-get install -y \
     wget curl \
