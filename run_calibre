@@ -5,9 +5,7 @@ import sys
 RECIPES = [
     "Orbyt - El Mundo.recipe",
     "Orbyt - Expansión.recipe",
-    "WSJ.recipe",
-    "Financial Times.recipe",
-    "El País.recipe"
+    "Financial Times.recipe"
 ]
 
 def check_recipe_list():
