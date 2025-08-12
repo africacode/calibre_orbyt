@@ -1,56 +1,36 @@
 import os
-import subprocess
+import smtplib
+from email.message import EmailMessage
 
-# Variables de entorno para credenciales y mails
-ORBYT_USER = os.getenv("ORBYT_USER")
-ORBYT_PASS = os.getenv("ORBYT_PASS")
-KINDLE_MAIL = os.getenv("KINDLE_MAIL")
-EMAIL_PASS = os.getenv("EMAIL_PASS")
+def send_to_kindle(email_kindle, email_sender, password, file_path):
+    print(f"Enviando {file_path} a {email_kindle}...")
+    msg = EmailMessage()
+    msg["Subject"] = "News Update"
+    msg["From"] = email_sender
+    msg["To"] = email_kindle
+    msg.set_content("Adjunto tienes el último número.")
 
-# Lista de recetas a procesar
-recipes = [
-    "El Mundo.recipe",
-    "Expansion.recipe",
-    "Pais.recipe",
-    "WSJ.recipe",
-    "FinancialTimes.recipe"
-]
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+        file_name = os.path.basename(file_path)
 
-def download_recipe(recipe_name):
-    print(f"Descargando {recipe_name}...")
-    # Aquí asumo que usas calibre con el comando ebook-convert o calibredb
-    # O también con start command tipo `calibre recipes`
-    cmd = [
-        "calibre",
-        "recipes",
-        "download",
-        recipe_name
-    ]
-    subprocess.run(cmd, check=True)
+    msg.add_attachment(file_data, maintype="application", subtype="octet-stream", filename=file_name)
 
-def send_to_kindle(file_path):
-    print(f"Enviando {file_path} a Kindle {KINDLE_MAIL}...")
-    # Aquí implementa tu lógica de envío de archivo por email
-    # por ejemplo usando smtplib o un script de envío
-    pass
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(email_sender, password)
+        smtp.send_message(msg)
 
-def main():
-    for recipe in recipes:
-        try:
-            download_recipe(recipe)
-            # Suponiendo que la descarga genera un archivo .pdf o .epub
-            filename = recipe.replace(".recipe", ".pdf")  # O .epub según receta
-            filepath = os.path.join("/path/to/downloaded/files", filename)
-            send_to_kindle(filepath)
-        except Exception as e:
-            print(f"Error con {recipe}: {e}")
+    print("Enviado.")
 
 if __name__ == "__main__":
-    main()
+    # Variables de entorno Railway
+    EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+    EMAIL_KINDLE = os.getenv("EMAIL_KINDLE")
 
-
-    # Envía correo con todos los archivos
-    send_email(files_to_send)
-
-if __name__ == '__main__':
-    main()
+    # Enviar todos los PDFs y ePubs generados en /app/output
+    output_dir = "/app/output"
+    for filename in os.listdir(output_dir):
+        if filename.endswith(".pdf") or filename.endswith(".epub") or filename.endswith(".mobi"):
+            file_path = os.path.join(output_dir, filename)
+            send_to_kindle(EMAIL_KINDLE, EMAIL_SENDER, EMAIL_PASSWORD, file_path)
