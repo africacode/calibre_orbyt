@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Instalar dependencias necesarias, incluyendo xz-utils para extraer .txz
+# Instalar dependencias + Calibre
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget curl xz-utils \
     libegl1 libopengl0 libxcb-cursor0 libxrender1 libxi6 libxcomposite1 libxrandr2 \
@@ -10,18 +10,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 libxau6 libxdmcp6 zlib1g libbz2-1.0 libexpat1 libuuid1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Calibre desde su instalador oficial
 RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
 
-# Definir directorio de trabajo para tu app
+# Directorio de trabajo
 WORKDIR /app
 
-# Copiar requerimientos y luego instalar dependencias de Python
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+# Copiar script para descargar
+COPY download_orbyt.sh /app/download_orbyt.sh
+RUN chmod +x /app/download_orbyt.sh
 
-# Copiar el resto de la app
-COPY . /app
+# Carpeta para salida
+RUN mkdir -p /app/output
 
-# Comando por defecto (ajusta según tu app)
-CMD ["python", "main.py"]
+# Variables de entorno para usuario/contraseña
+ENV ORBYT_USER=""
+ENV ORBYT_PASS=""
+
+# Comando por defecto
+CMD ["/app/download_orbyt.sh"]
+
