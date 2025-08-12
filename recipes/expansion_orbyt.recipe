@@ -1,8 +1,12 @@
-from calibre.web.feeds.news import BasicNewsRecipe
+from calibre.web.feeds.recipes import BasicNewsRecipe
 
-class ExpansionOrbyt(BasicNewsRecipe):
-    title = 'Expansion Orbyt'
-    oldest_article = 1
-    max_articles_per_feed = 10
-    feeds = [('Portada', 'https://quiosco.expansion.orbyt.es/rss')]  # Dummy, Orbyt no da RSS real
+class ExpansionRecipe(BasicNewsRecipe):
+    title = 'Expansión'
+    oldest_article = 7
+    max_articles_per_feed = 100
+    language = 'es'
+    feeds = [
+        ('Orbyt', 'https://www.expansion.com/orbyt/')
+    ]
+    # Añade aquí la lógica si usas un plugin custom para Orbyt.
 
