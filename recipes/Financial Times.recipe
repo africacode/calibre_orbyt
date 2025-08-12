@@ -1,0 +1,9 @@
+from calibre.web.feeds.recipes import BasicNewsRecipe
+
+class FinancialTimesRecipe(BasicNewsRecipe):
+    title = 'Financial Times'
+    oldest_article = 7
+    max_articles_per_feed = 20
+    feeds = [
+        ('Financial Times', 'https://www.ft.com/?format=rss'),
+    ]
