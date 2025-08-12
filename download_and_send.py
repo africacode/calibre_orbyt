@@ -1,36 +1,41 @@
 import os
-import smtplib
-from email.message import EmailMessage
+import subprocess
+import logging
 
-def send_to_kindle(email_kindle, email_sender, password, file_path):
-    print(f"Enviando {file_path} a {email_kindle}...")
-    msg = EmailMessage()
-    msg["Subject"] = "News Update"
-    msg["From"] = email_sender
-    msg["To"] = email_kindle
-    msg.set_content("Adjunto tienes el último número.")
+def descargar_y_enviar():
+    # Variables de entorno
+    ORBYT_USER = os.getenv('ORBYT_USER')
+    ORBYT_PASS = os.getenv('ORBYT_PASS')
+    EMAIL_FROM = os.getenv('EMAIL_FROM')
+    EMAIL_PASS = os.getenv('EMAIL_PASS')
+    EMAIL_TO = os.getenv('EMAIL_TO')
 
-    with open(file_path, "rb") as f:
-        file_data = f.read()
-        file_name = os.path.basename(file_path)
+    if not all([ORBYT_USER, ORBYT_PASS, EMAIL_FROM, EMAIL_PASS, EMAIL_TO]):
+        logging.error("Faltan variables de entorno necesarias.")
+        return
 
-    msg.add_attachment(file_data, maintype="application", subtype="octet-stream", filename=file_name)
+    # Ejemplo: descarga PDF de El Mundo usando la receta "Orbyt - El Mundo.recipe"
+    receta = "Orbyt - El Mundo.recipe"
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(email_sender, password)
-        smtp.send_message(msg)
+    try:
+        logging.info(f"Descargando ebook con receta {receta}...")
+        cmd = [
+            "calibre", "fetch-ebook",
+            "--username", ORBYT_USER,
+            "--password", ORBYT_PASS,
+            "--output", "/app/output",
+            receta
+        ]
+        subprocess.run(cmd, check=True)
+        logging.info("Descarga completada.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error descargando con la receta {receta}: {e}")
+        return
 
-    print("Enviado.")
+    # Aquí pondrías la lógica para enviar por email el archivo descargado
+    # usando EMAIL_FROM, EMAIL_PASS y EMAIL_TO
+    # ...
 
 if __name__ == "__main__":
-    # Variables de entorno Railway
-    EMAIL_SENDER = os.getenv("EMAIL_SENDER")
-    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-    EMAIL_KINDLE = os.getenv("EMAIL_KINDLE")
-
-    # Enviar todos los PDFs y ePubs generados en /app/output
-    output_dir = "/app/output"
-    for filename in os.listdir(output_dir):
-        if filename.endswith(".pdf") or filename.endswith(".epub") or filename.endswith(".mobi"):
-            file_path = os.path.join(output_dir, filename)
-            send_to_kindle(EMAIL_KINDLE, EMAIL_SENDER, EMAIL_PASSWORD, file_path)
+    logging.basicConfig(level=logging.INFO)
+    descargar_y_enviar()
