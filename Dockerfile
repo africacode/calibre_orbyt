@@ -16,8 +16,8 @@ RUN wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev
 WORKDIR /app
 
 # Copiar script para descargar
-COPY download_orbyt.sh /app/download_orbyt.sh
-RUN chmod +x /app/download_orbyt.sh
+#COPY download_orbyt.sh /app/download_orbyt.sh
+#RUN chmod +x /app/download_orbyt.sh
 
 # Carpeta para salida
 RUN mkdir -p /app/output
