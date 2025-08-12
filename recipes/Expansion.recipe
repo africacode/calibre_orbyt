@@ -1,12 +1,32 @@
-from calibre.web.feeds.recipes import BasicNewsRecipe
+import os
+import logging
 
-class ExpansionRecipe(BasicNewsRecipe):
-    title = 'Expansión'
-    oldest_article = 7
-    max_articles_per_feed = 100
-    language = 'es'
-    feeds = [
-        ('Orbyt', 'https://www.expansion.com/orbyt/')
-    ]
-    # Añade aquí la lógica si usas un plugin custom para Orbyt.
+log = logging.getLogger(__name__)
 
+class ExpansionRecipe(Recipe):
+    title = 'Orbyt - Expansión'
+    # otras propiedades y métodos
+
+    def __init__(self):
+        super().__init__()
+        self.user = os.getenv("ORBYT_USER")
+        self.password = os.getenv("ORBYT_PASS")
+
+        if not self.user or not self.password:
+            log.error("⚠️ ERROR: ORBYT_USER o ORBYT_PASS no están definidas en las variables de entorno.")
+            raise ValueError("Faltan credenciales ORBYT_USER o ORBYT_PASS")
+
+    def download(self):
+        try:
+            # Ejemplo de autenticación, reemplaza con tu lógica real
+            success = self.login(self.user, self.password)
+            if not success:
+                log.error("⚠️ ERROR: Fallo en la autenticación con Expansión. Revisa usuario/contraseña.")
+                return False
+            
+            # Resto de la descarga aquí
+            return True
+
+        except Exception as e:
+            log.error(f"⚠️ ERROR inesperado en la receta Expansión: {e}")
+            raise
