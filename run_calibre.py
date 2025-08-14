@@ -13,9 +13,13 @@ RECIPES = [
 def process_recipe(recipe_name):
     try:
         logging.info(f"Iniciando proceso con receta: {recipe_name}")
+        safe_name = recipe_name.replace(".recipe", "").strip()
+        out_path = os.path.join("/app/output", f"{safe_name}.epub")
+
         subprocess.run([
-            "calibre", "fetch-ebook", "--recipe", recipe_name, "--output", "/app/output"
+            "ebook-convert", recipe_name, out_path, "--output-profile", "kindle"
         ], check=True)
+
         logging.info(f"Receta {recipe_name} completada correctamente.")
     except subprocess.CalledProcessError as e:
         logging.warning(f"Advertencia: La receta {recipe_name} falló con error: {e}. Continuando con la siguiente.")
