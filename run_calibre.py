@@ -2,26 +2,31 @@ import os
 import subprocess
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
-def listar_recetas():
+RECIPES = [
+    "Orbyt - El Mundo.recipe",
+    "Orbyt - Expansión.recipe",
+    "Financial Times.recipe"
+]
+
+def process_recipe(recipe_name):
     try:
-        result = subprocess.run(
-            ['calibre', 'fetch-ebook', '--list-recipes'],
-            capture_output=True, text=True, check=True
-        )
-        logging.info("Recetas disponibles:\n%s", result.stdout)
+        logging.info(f"Iniciando proceso con receta: {recipe_name}")
+        subprocess.run([
+            "calibre", "fetch-ebook", "--recipe", recipe_name, "--output", "/app/output"
+        ], check=True)
+        logging.info(f"Receta {recipe_name} completada correctamente.")
     except subprocess.CalledProcessError as e:
-        logging.error("Error al listar recetas: %s\n%s", e, e.stderr)
+        logging.warning(f"Advertencia: La receta {recipe_name} falló con error: {e}. Continuando con la siguiente.")
+    except Exception as e:
+        logging.error(f"Error inesperado con {recipe_name}: {e}. Continuando.")
 
 def main():
-    logging.info("Comprobando recetas disponibles en Calibre...")
-    listar_recetas()
-
-    # Aquí pondrás la lógica para llamar a tus funciones de descarga y envío
-    # Por ejemplo:
-    # from download_and_send import descargar_y_enviar
-    # descargar_y_enviar()
+    for recipe in RECIPES:
+        process_recipe(recipe)
+    # Aquí puedes invocar envío por email si lo tienes configurado
 
 if __name__ == "__main__":
     main()
+
